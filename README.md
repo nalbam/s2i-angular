@@ -1,1 +1,2 @@
-# s2i-angular
+AngularJS - CentOS Docker image
+========================================
