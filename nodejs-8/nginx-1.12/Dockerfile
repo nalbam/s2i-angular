@@ -1,9 +1,6 @@
 FROM centos/s2i-core-centos7
 
-# RHSCL rh-nginx112 image.
-#
-# Volumes:
-#  * /var/opt/rh/rh-nginx112/log/nginx/ - Storage for logs
+MAINTAINER Jungyoul Yu <jungyouol.yu@bespinglobal.com>
 
 EXPOSE 8080
 EXPOSE 8443
@@ -14,26 +11,12 @@ ENV NAME=nginx \
     NODEJS_VERSION=8 \
     VERSION=0
 
-ENV SUMMARY="Platform for running nginx $NGINX_VERSION or building nginx-based application" \
-    DESCRIPTION="Nginx is a web server and a reverse proxy server for HTTP, SMTP, POP3 and IMAP \
-protocols, with a strong focus on high concurrency, performance and low memory usage. The container \
-image provides a containerized packaging of the nginx $NGINX_VERSION daemon. The image can be used \
-as a base image for other applications based on nginx $NGINX_VERSION web server. \
-Nginx server image can be extended using source-to-image tool."
-
-LABEL summary="${SUMMARY}" \
-      description="${DESCRIPTION}" \
-      io.k8s.description="${DESCRIPTION}" \
-      io.k8s.display-name="Nginx ${NGINX_VERSION}" \
+LABEL io.k8s.description="Platform for building and running Angular applications" \
+      io.k8s.display-name="Angular (nodejs 8, nginx 1.12)" \
       io.openshift.expose-services="8080:http" \
       io.openshift.expose-services="8443:https" \
-      io.openshift.tags="builder,${NAME},rh-${NAME}${NGINX_SHORT_VER}" \
-      com.redhat.component="rh-${NAME}${NGINX_SHORT_VER}-docker" \
-      name="centos/${NAME}-${NGINX_SHORT_VER}-centos7" \
-      version="${NGINX_VERSION}" \
-      maintainer="SoftwareCollections.org <sclorg@redhat.com>" \
-      help="For more information visit https://github.com/sclorg/${NAME}-container" \
-      usage="s2i build <SOURCE-REPOSITORY> centos/${NAME}-${NGINX_SHORT_VER}-centos7:latest <APP-NAME>"
+      io.openshift.tags="builder,nodejs,angular" \
+      io.openshift.s2i.destination="/opt/s2i/destination"
 
 ENV NGINX_CONFIGURATION_PATH=${APP_ROOT}/etc/nginx.d \
     NGINX_CONF_PATH=/etc/opt/rh/rh-nginx112/nginx/nginx.conf \
