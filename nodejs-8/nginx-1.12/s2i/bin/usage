@@ -1,17 +1,14 @@
 #!/bin/sh
 
-DISTRO=`cat /etc/*-release | grep ^ID= | grep -Po '".*?"' | tr -d '"'`
-NAMESPACE=centos
-[[ ${DISTRO} =~ rhel* ]] && NAMESPACE=rhscl
-
 cat <<EOF
-This is a S2I ${IMAGE_DESCRIPTION} ${DISTRO} base image:
-To use it, install S2I: https://github.com/openshift/source-to-image
+Angular application server.
+To use it, install S2I: https://github.com/openshift/source-to-image.
 
 Sample invocation:
 
-s2i build https://github.com/sclorg/nginx-container.git --context-dir=1.12/test/test-app/ ${NAMESPACE}/nginx-112-${DISTRO}7 nginx-sample-app
+s2i build git://github.com/bespin-sbl/sample-angular bespinsbl/s2i-angular:jdk-8 sample-angular
 
 You can then run the resulting image via:
-docker run -p 8080:8080 nginx-sample-app
+docker run -p 8080:8080 sample-angular
+
 EOF
