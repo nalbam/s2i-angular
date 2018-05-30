@@ -3,7 +3,6 @@ FROM openshift/base-centos7
 MAINTAINER Jungyoul Yu <jungyouol.yu@bespinglobal.com>
 
 EXPOSE 8080
-EXPOSE 8443
 
 ENV NAME=nginx \
     NGINX_VERSION=1.12 \
@@ -14,7 +13,6 @@ ENV NAME=nginx \
 LABEL io.k8s.description="Platform for building and running Angular applications" \
       io.k8s.display-name="Angular (nodejs 8, nginx 1.12)" \
       io.openshift.expose-services="8080:http" \
-      io.openshift.expose-services="8443:https" \
       io.openshift.tags="builder,nodejs,angular" \
       io.openshift.s2i.destination="/opt/s2i/destination"
 
@@ -24,21 +22,15 @@ ENV NGINX_CONFIGURATION_PATH=${APP_ROOT}/etc/nginx.d \
     NGINX_CONTAINER_SCRIPTS_PATH=/usr/share/container-scripts/nginx \
     NGINX_APP_ROOT=${APP_ROOT}
 
-RUN yum install -y yum-utils gettext hostname && \
-    yum install -y centos-release-scl-rh epel-release && \
-    yum remove -y rh-nodejs6\* && \
+RUN yum install -y centos-release-scl-rh epel-release && \
     yum-config-manager --enable centos-sclo-rh-testing && \
-    INSTALL_PKGS="nss_wrapper bind-utils rh-nginx$NGINX_SHORT_VER rh-nginx$NGINX_SHORT_VER-nginx rh-nodejs$NODEJS_VERSION rh-nodejs$NODEJS_VERSION-npm rh-nodejs$NODEJS_VERSION-nodejs-nodemon nss_wrapper" && \
-    ln -s /usr/lib/node_modules/nodemon/bin/nodemon.js /usr/bin/nodemon && \
+    INSTALL_PKGS="nss_wrapper bind-utils rh-nginx112 rh-nginx112-nginx rh-nodejs8 rh-nodejs8-npm" && \
     yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all
 
 # Copy the S2I scripts from the specific language image to $STI_SCRIPTS_PATH
 COPY ./s2i/bin/ $STI_SCRIPTS_PATH
-
-# Copy extra files to the image.
-COPY ./root/ /
 
 # In order to drop the root user, we have to make some directories world
 # writeable as OpenShift default security model is to run the container under
