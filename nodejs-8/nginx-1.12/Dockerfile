@@ -1,4 +1,4 @@
-FROM centos/s2i-core-centos7
+FROM openshift/base-centos7
 
 MAINTAINER Jungyoul Yu <jungyouol.yu@bespinglobal.com>
 
