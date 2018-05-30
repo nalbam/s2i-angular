@@ -1,0 +1,99 @@
+#!/bin/bash
+
+set -e
+
+#### source ####
+
+echo "---> Installing application source"
+cp -Rf /tmp/src/. ./
+
+#### node.js ####
+
+# Change the npm registry mirror if provided
+if [ -n "$NPM_MIRROR" ]; then
+  npm config set registry $NPM_MIRROR
+fi
+
+# Set the DEV_MODE to false by default.
+if [ -z "$DEV_MODE" ]; then
+  export DEV_MODE=false
+fi
+
+# If NODE_ENV is not set by the user, then NODE_ENV is determined by whether
+# the container is run in development mode.
+if [ -z "$NODE_ENV" ]; then
+  if [ "$DEV_MODE" == true ]; then
+    export NODE_ENV=development
+  else
+    export NODE_ENV=production
+  fi
+fi
+
+if [ "$NODE_ENV" != "production" ]; then
+
+	echo "---> Building your Node application from source"
+	npm install
+
+else
+
+	echo "---> Installing all dependencies"
+	NODE_ENV=development npm install
+
+	#do not fail when there is no build script
+	echo "---> Building in production mode"
+	npm run build --if-present
+
+	echo "---> Pruning the development dependencies"
+	npm prune
+
+	# Clear the npm's cache and tmp directories only if they are not a docker volumes
+	NPM_CACHE=$(npm config get cache)
+	if ! mountpoint ${NPM_CACHE}; then
+		echo "---> Cleaning the npm cache $NPM_CACHE"
+		#As of npm@5 even the 'npm cache clean --force' does not fully remove the cache directory
+		rm ${NPM_CACHE}* -rf
+	fi
+	NPM_TMP=$(npm config get tmp)
+	if ! mountpoint ${NPM_TMP}; then
+		echo "---> Cleaning the $NPM_TMP/npm-*"
+		rm -rf ${NPM_TMP}/npm-*
+	fi
+
+fi
+
+#### nginx ####
+
+if [ -f ./nginx.conf ]; then
+  echo "---> Copying nginx.conf configuration file..."
+  cp -v ./nginx.conf "${NGINX_CONF_PATH}"
+  rm -f ./nginx.conf
+fi
+
+if [ -d ./nginx-cfg ]; then
+  echo "---> Copying nginx configuration files..."
+  if [ "$(ls -A ./nginx-cfg/*.conf)" ]; then
+    cp -v ./nginx-cfg/*.conf "${NGINX_CONFIGURATION_PATH}"
+    rm -rf ./nginx-cfg
+  fi
+  chmod -Rf g+rw ${NGINX_CONFIGURATION_PATH}
+fi
+
+if [ -d ./nginx-default-cfg ]; then
+  echo "---> Copying nginx default server configuration files..."
+  if [ "$(ls -A ./nginx-default-cfg/*.conf)" ]; then
+    cp -v ./nginx-default-cfg/*.conf "${NGINX_DEFAULT_CONF_PATH}"
+    rm -rf ./nginx-default-cfg
+  fi
+  chmod -Rf g+rw ${NGINX_DEFAULT_CONF_PATH}
+fi
+
+if [ -d ./nginx-start ]; then
+  echo "---> Copying nginx start-hook scripts..."
+  if [ "$(ls -A ./nginx-start/* 2>/dev/null)" ]; then
+    cp -v ./nginx-start/* "${NGINX_CONTAINER_SCRIPTS_PATH}/nginx-start/"
+    rm -rf ./nginx-start
+  fi
+fi
+
+# Fix source directory permissions
+fix-permissions ./
